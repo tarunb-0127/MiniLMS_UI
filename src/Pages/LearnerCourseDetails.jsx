@@ -55,6 +55,31 @@ export default function LearnerCourseDetails() {
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
   const [hasFeedback, setHasFeedback] = useState(false);
   const [allFeedbacks, setAllFeedbacks] = useState([]);
+
+  // 1) Validation state
+const [errors, setErrors]   = useState({ message: "", rating: "" });
+const [touched, setTouched] = useState({ message: false, rating: false });
+
+// 2) Validator helpers
+const validateMessage = msg => {
+  if (!msg.trim())              return "Comments are required.";
+  if (msg.trim().length < 10)   return "Comments must be at least 10 characters.";
+  return "";
+};
+
+const validateRating = r => {
+  if (!r || r < 1 || r > 5)     return "Please select a rating 1–5.";
+  return "";
+};
+
+// 3) Combined validation
+const validateFeedback = () => {
+  const messageErr = validateMessage(feedbackMsg);
+  const ratingErr  = validateRating(feedbackRating);
+  setErrors({ message: messageErr, rating: ratingErr });
+  return !messageErr && !ratingErr;
+};
+
  
   // Construct file URL
   const getFileUrl = (filePath) => {
@@ -337,27 +362,95 @@ export default function LearnerCourseDetails() {
             </div>
  
             {/* Feedback Form */}
-            {isLast && !hasFeedback && (
-              <div className="card shadow-sm p-3 mb-3">
-                <h5>Leave Your Feedback</h5>
-                {feedbackSuccess && <div className="alert alert-success">{feedbackSuccess}</div>}
-                <form onSubmit={handleFeedbackSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">Your comments</label>
-                    <textarea className="form-control" rows={3} value={feedbackMsg} onChange={(e) => setFeedbackMsg(e.target.value)} required />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Rating</label>
-                    <div>
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <Star key={n} size={24} className="me-1" style={{ cursor: "pointer" }} color={n <= feedbackRating ? "#ffc107" : "#adb5bd"} onClick={() => setFeedbackRating(n)} />
-                      ))}
-                    </div>
-                  </div>
-                  <button type="submit" className="btn btn-primary" disabled={sendingFeedback}>{sendingFeedback ? "Sending…" : "Submit Feedback"}</button>
-                </form>
-              </div>
-            )}
+{isLast && !hasFeedback && (
+  <div className="card shadow-sm p-3 mb-3">
+    <h5>Leave Your Feedback</h5>
+    {feedbackSuccess && (
+      <div className="alert alert-success">{feedbackSuccess}</div>
+    )}
+
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        // mark fields as touched
+        setTouched({ message: true, rating: true });
+        // validate everything
+        if (!validateFeedback()) return;
+        // if valid, call your existing handler
+        handleFeedbackSubmit(e);
+      }}
+      noValidate
+    >
+      {/* Comments */}
+      <div className="mb-3">
+        <label className="form-label">Your comments</label>
+        <textarea
+          className={`form-control ${
+            touched.message && errors.message ? "is-invalid" : ""
+          }`}
+          rows={3}
+          value={feedbackMsg}
+          onChange={e => {
+            setFeedbackMsg(e.target.value);
+            if (touched.message) {
+              setErrors(errs => ({
+                ...errs,
+                message: validateMessage(e.target.value)
+              }));
+            }
+          }}
+          onBlur={() => {
+            setTouched(t => ({ ...t, message: true }));
+            setErrors(errs => ({
+              ...errs,
+              message: validateMessage(feedbackMsg)
+            }));
+          }}
+        />
+        {touched.message && errors.message && (
+          <div className="invalid-feedback">{errors.message}</div>
+        )}
+      </div>
+
+      {/* Rating */}
+      <div className="mb-3">
+        <label className="form-label">Rating</label>
+        <div>
+          {[1, 2, 3, 4, 5].map(n => (
+            <Star
+              key={n}
+              size={24}
+              className="me-1"
+              style={{ cursor: "pointer" }}
+              color={n <= feedbackRating ? "#ffc107" : "#adb5bd"}
+              onClick={() => {
+                setFeedbackRating(n);
+                if (touched.rating) {
+                  setErrors(errs => ({
+                    ...errs,
+                    rating: validateRating(n)
+                  }));
+                }
+              }}
+            />
+          ))}
+        </div>
+        {touched.rating && errors.rating && (
+          <div className="text-danger mt-1">{errors.rating}</div>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        className="btn btn-primary"
+        disabled={sendingFeedback}
+      >
+        {sendingFeedback ? "Sending…" : "Submit Feedback"}
+      </button>
+    </form>
+  </div>
+)}
+
  
             {hasFeedback && <div className="alert alert-info mb-3">You have already submitted feedback for this course. Thank you!</div>}
  

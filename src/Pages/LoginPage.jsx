@@ -6,13 +6,21 @@ import { Mail, Lock, UserCheck, UserPlus, User } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole]         = useState("Trainer");
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
 
-  // If already logged in, redirect to appropriate home
+  // form state
+  const [email, setEmail]     = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole]       = useState("Trainer");
+
+  // validation state
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [errors, setErrors]   = useState({ email: "", password: "" });
+
+  // server error/loading
+  const [serverError, setServerError] = useState("");
+  const [loading, setLoading]         = useState(false);
+
+  // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedRole = localStorage.getItem("role");
@@ -21,11 +29,11 @@ export default function Login() {
     }
   }, [navigate]);
 
-  // Intercept 401s and force logout
+  // 401 interceptor
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
-      (res) => res,
-      (err) => {
+      res => res,
+      err => {
         if (err.response?.status === 401) {
           localStorage.clear();
           window.location.href = "/login";
@@ -36,13 +44,62 @@ export default function Login() {
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  // validators
+  const validateEmail = value => {
+    if (!value.trim()) return "Email is required.";
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!re.test(value)) return "Enter a valid email address.";
+    return "";
+  };
 
+  const validatePassword = value => {
+    if (!value) return "Password is required.";
+    if (value.length < 6) return "Password must be at least 6 characters.";
+    return "";
+  };
+
+  // handle field blur
+  const handleBlur = field => () => {
+    setTouched(t => ({ ...t, [field]: true }));
+    setErrors(e => ({
+      ...e,
+      [field]: field === "email"
+        ? validateEmail(email)
+        : validatePassword(password)
+    }));
+  };
+
+  // handle field change
+  const handleEmailChange = e => {
+    const val = e.target.value;
+    setEmail(val);
+    if (touched.email) {
+      setErrors(e => ({ ...e, email: validateEmail(val) }));
+    }
+  };
+
+  const handlePasswordChange = e => {
+    const val = e.target.value;
+    setPassword(val);
+    if (touched.password) {
+      setErrors(e => ({ ...e, password: validatePassword(val) }));
+    }
+  };
+
+  // form submit
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setServerError("");
+
+    // mark touched and validate
+    setTouched({ email: true, password: true });
+    const emailErr    = validateEmail(email);
+    const passwordErr = validatePassword(password);
+    setErrors({ email: emailErr, password: passwordErr });
+    if (emailErr || passwordErr) return;
+
+    setLoading(true);
     try {
-      // Build FormData as your backend expects
       const form = new FormData();
       form.append("email", email);
       form.append("password", password);
@@ -55,18 +112,13 @@ export default function Login() {
       );
 
       const { token } = res.data;
-      // Persist token + role
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
-
-      // Auto-inject into all future Axios calls
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      // Redirect
       navigate(role === "Trainer" ? "/trainer/home" : "/learner/home");
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.response?.data?.message || "Login failed. Please check credentials.");
+      setServerError(err.response?.data?.message || "Login failed. Check credentials.");
     } finally {
       setLoading(false);
     }
@@ -81,40 +133,42 @@ export default function Login() {
           <p className="text-muted">Please login to continue</p>
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
+        {serverError && <div className="alert alert-danger">{serverError}</div>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div className="mb-3">
             <div className="input-group">
-              <span className="input-group-text bg-white">
-                <Mail size={16} />
-              </span>
+              <span className="input-group-text bg-white"><Mail size={16} /></span>
               <input
                 type="email"
-                className="form-control"
+                className={`form-control ${touched.email && errors.email ? "is-invalid" : ""}`}
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={handleEmailChange}
+                onBlur={handleBlur("email")}
               />
+              {touched.email && errors.email && (
+                <div className="invalid-feedback">{errors.email}</div>
+              )}
             </div>
           </div>
 
           {/* Password */}
           <div className="mb-3">
             <div className="input-group">
-              <span className="input-group-text bg-white">
-                <Lock size={16} />
-              </span>
+              <span className="input-group-text bg-white"><Lock size={16} /></span>
               <input
                 type="password"
-                className="form-control"
+                className={`form-control ${touched.password && errors.password ? "is-invalid" : ""}`}
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={handlePasswordChange}
+                onBlur={handleBlur("password")}
               />
+              {touched.password && errors.password && (
+                <div className="invalid-feedback">{errors.password}</div>
+              )}
             </div>
           </div>
 

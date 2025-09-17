@@ -1,4 +1,5 @@
 // src/pages/BrowseCourses.jsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -25,35 +26,36 @@ export default function BrowseCourses() {
       }
 
       try {
+        // decode so we load learner’s enrollments
         const decoded   = jwtDecode(token);
         const learnerId = decoded.userId || decoded.sub;
 
-        // 1) fetch all public courses
+        // 1) fetch all courses
         const coursesRes = await axios.get(
           "http://localhost:5254/api/Course/all",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setBrowseCourses(coursesRes.data);
 
-        // 2) fetch enrolled courses
+        // 2) fetch learner’s enrollments
         const enrollRes = await axios.get(
           "http://localhost:5254/api/Enrollment/my-courses",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const enrolledCourses = enrollRes.data || [];
-        const ids = enrolledCourses.map((c) => c.id);
+        const ids = enrolledCourses.map(c => c.id);
         setEnrolledCourseIds(ids);
 
-        // 3) build map courseId → enrollmentId
+        // 3) map courseId → enrollmentId
         const map = {};
-        enrolledCourses.forEach((c) => {
+        enrolledCourses.forEach(c => {
           map[c.id] = c.enrollmentId || c.id;
         });
         setEnrollmentsMap(map);
 
         setLoading(false);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load courses or enrollments", err);
         navigate("/login");
       }
     };
@@ -61,8 +63,12 @@ export default function BrowseCourses() {
     fetchCourses();
   }, [token, navigate]);
 
+  // only public courses whose name matches the search term
+  const filteredCourses = browseCourses
+    .filter(c => c.visibility === "Public")
+    .filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+
   const handleUnenroll = async (courseId, e) => {
-    // prevent card onClick
     e.stopPropagation();
     if (!window.confirm("Unenroll from this course?")) return;
 
@@ -72,22 +78,18 @@ export default function BrowseCourses() {
         `http://localhost:5254/api/Enrollment/${enrollmentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setEnrolledCourseIds((prev) => prev.filter((id) => id !== courseId));
-      setEnrollmentsMap((prev) => {
+      setEnrolledCourseIds(prev => prev.filter(id => id !== courseId));
+      setEnrollmentsMap(prev => {
         const next = { ...prev };
         delete next[courseId];
         return next;
       });
       alert("Successfully unenrolled.");
     } catch (err) {
-      console.error(err);
+      console.error("Failed to unenroll", err);
       alert("Failed to unenroll.");
     }
   };
-
-  const filteredCourses = browseCourses.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   if (loading) {
     return <div className="container mt-5">Loading...</div>;
@@ -111,17 +113,17 @@ export default function BrowseCourses() {
             <input
               type="text"
               className="form-control"
-              placeholder="Search courses..."
+              placeholder="Search public courses..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
             />
           </div>
         </div>
 
         {/* Courses Grid */}
         <div className="row g-3">
-          {filteredCourses.length ? (
-            filteredCourses.map((c) => {
+          {filteredCourses.length > 0 ? (
+            filteredCourses.map(c => {
               const enrolled = enrolledCourseIds.includes(c.id);
               return (
                 <div key={c.id} className="col-md-3">
@@ -141,7 +143,7 @@ export default function BrowseCourses() {
 
                     <div>
                       <h6>{c.name}</h6>
-                      <p className="mb-0">Trainer: {c.trainer?.username}</p>
+                      <p className="mb-0">Trainer: {c.trainer?.username || "N/A"}</p>
                       <p className="mb-0">Duration: {c.duration} hrs</p>
                     </div>
 
@@ -149,7 +151,7 @@ export default function BrowseCourses() {
                       {enrolled ? (
                         <button
                           className="btn btn-sm btn-danger w-100"
-                          onClick={(e) => handleUnenroll(c.id, e)}
+                          onClick={e => handleUnenroll(c.id, e)}
                         >
                           <Trash2 size={16} className="me-1" />
                           Unenroll
@@ -158,7 +160,7 @@ export default function BrowseCourses() {
                         <Link
                           to={`/learner/course/${c.id}`}
                           className="btn btn-sm btn-outline-primary w-100"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
                         >
                           View
                         </Link>
@@ -169,7 +171,7 @@ export default function BrowseCourses() {
               );
             })
           ) : (
-            <p>No courses found.</p>
+            <p className="text-muted">No public courses found.</p>
           )}
         </div>
       </div>
