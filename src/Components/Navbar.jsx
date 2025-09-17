@@ -75,11 +75,6 @@ export default function Navbar() {
             ))}
           </ul>
           <div className="d-flex align-items-center">
-            {localStorage.getItem("email") && (
-              <span className="me-3 text-muted">
-                {localStorage.getItem("email")}
-              </span>
-            )}
             {localStorage.getItem("token") && (
               <button className="btn btn-outline-danger" onClick={handleLogout}>
                 Logout

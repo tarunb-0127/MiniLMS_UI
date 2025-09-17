@@ -133,7 +133,7 @@ const validateFeedback = () => {
       }
  
       const [modulesRes, progressRes, feedbackRes] = await Promise.all([
-        axios.get(`http://localhost:5254/api/module/course/${id}`, { headers: authHeaders }),
+        axios.get(`http://localhost:5254/api/Module/course/${id}`, { headers: authHeaders }),
         axios.get(`http://localhost:5254/api/Progress/modules/${id}`, { headers: authHeaders }),
         axios.get(`http://localhost:5254/api/Feedbacks/course/${id}`, { headers: authHeaders }),
       ]);
@@ -281,7 +281,7 @@ const validateFeedback = () => {
             <button
               className="btn btn-danger btn-sm me-2"
               onClick={async () => {
-                const enrollRes = await axios.get(`http://localhost:5254/api/enrollment/my-courses`, { headers: authHeaders });
+                const enrollRes = await axios.get(`http://localhost:5254/api/Enrollment/my-courses`, { headers: authHeaders });
                 const enrolledRecord = enrollRes.data.find((c) => c.id === +id);
                 if (!enrolledRecord) return;
                 if (!window.confirm("Unenroll?")) return;
@@ -336,7 +336,7 @@ const validateFeedback = () => {
         className="btn btn-primary btn-sm"
         onClick={async () => {
           await axios.post(
-            `http://localhost:5254/api/enrollment/enroll/${id}`,
+            `http://localhost:5254/api/Enrollment/enroll/${id}`,
             {},
             { headers: authHeaders }
           );

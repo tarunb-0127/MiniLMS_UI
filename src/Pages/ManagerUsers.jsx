@@ -202,7 +202,6 @@ export default function ManageUsers() {
                       <th>Username</th>
                       <th>Email</th>
                       <th>Role</th>
-                      <th>Status</th>
                       <th className="text-center">Actions</th>
                     </tr>
                   </thead>
@@ -213,13 +212,7 @@ export default function ManageUsers() {
                           <td>{u.username}</td>
                           <td>{u.email}</td>
                           <td>{u.role}</td>
-                          <td>
-                            <span
-                              className={`badge ${u.is_active ? "bg-success" : "bg-secondary"}`}
-                            >
-                              {u.is_active ? "Active" : "Inactive"}
-                            </span>
-                          </td>
+                          
                           <td className="text-center">
                             <div className="d-flex justify-content-center gap-2">
                               <button
@@ -229,13 +222,7 @@ export default function ManageUsers() {
                               >
                                 <Send size={16} />
                               </button>
-                              <button
-                                className={`btn btn-sm rounded-2 ${u.is_active ? "btn-warning" : "btn-success"}`}
-                                onClick={() => toggleUserStatus(u.id)}
-                                title={u.is_active ? "Deactivate" : "Activate"}
-                              >
-                                {u.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
-                              </button>
+                             
                               <button
                                 className="btn btn-sm btn-danger rounded-2"
                                 onClick={() => deleteUser(u.id)}

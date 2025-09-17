@@ -79,7 +79,7 @@ export default function AdminLogin() {
       formData.append("email",    email);
       formData.append("password", password);
 
-      const res = await fetch("http://localhost:5254/api/auth/login/admin", {
+      const res = await fetch("http://localhost:5254/api/Auth/login/admin", {
         method: "POST",
         body: formData
       });
