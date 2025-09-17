@@ -275,6 +275,7 @@ const validateFeedback = () => {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold"><BookOpen className="me-2" size={22} />{course.name}</h3>
+        
         <div>
           {enrolled && (
             <button
@@ -295,21 +296,61 @@ const validateFeedback = () => {
         </div>
       </div>
  
-      {/* Course Info */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-body">
-          <p className="mb-1"><User className="me-1" size={14} /> Trainer: {course.trainer?.username}</p>
-          <p className="mb-1"><Clock className="me-1" size={14} /> Duration: {course.duration} hrs</p>
-          <p className="mb-2"><FileText className="me-1" size={14} /> Type: {course.type}</p>
-          <p className="text-muted">{course.description}</p>
-          {!enrolled ? (
-            <button className="btn btn-primary btn-sm" onClick={async () => { await axios.post(`http://localhost:5254/api/enrollment/enroll/${id}`, {}, { headers: authHeaders }); loadData(); }}>Enroll in Course</button>
-          ) : (
-            <span className="badge bg-success">Enrolled</span>
-          )}
+     {/* Course Info */}
+<div className="card shadow-sm mb-4">
+  <div className="card-body">
+    <p className="mb-1">
+      <User className="me-1" size={14} /> Trainer: {course.trainer?.username}
+    </p>
+    <p className="mb-1">
+      <Clock className="me-1" size={14} /> Duration: {course.duration} hrs
+    </p>
+    <p className="mb-2">
+      <FileText className="me-1" size={14} /> Type: {course.type}
+    </p>
+    <p className="text-muted">{course.description}</p>
+
+    {/* ← Add this block: */}
+    {enrolled && (
+      <div className="mb-3">
+        <label className="form-label">
+          Progress: {courseProgress.toFixed(0)}%
+        </label>
+        <div className="progress">
+          <div
+            className="progress-bar"
+            role="progressbar"
+            style={{ width: `${courseProgress}%` }}
+            aria-valuenow={courseProgress}
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            {courseProgress.toFixed(0)}%
+          </div>
         </div>
       </div>
- 
+    )}
+
+    {!enrolled ? (
+      <button
+        className="btn btn-primary btn-sm"
+        onClick={async () => {
+          await axios.post(
+            `http://localhost:5254/api/enrollment/enroll/${id}`,
+            {},
+            { headers: authHeaders }
+          );
+          loadData();
+        }}
+      >
+        Enroll in Course
+      </button>
+    ) : (
+      <span className="badge bg-success">Enrolled</span>
+    )}
+  </div>
+</div>
+
       {/* Modules & Content */}
       {!enrolled ? (
         <div className="alert alert-info d-flex align-items-center"><Lock className="me-2" size={16} /> Enroll to view modules.</div>
