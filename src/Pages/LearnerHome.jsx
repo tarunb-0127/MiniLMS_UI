@@ -105,12 +105,12 @@ export default function LearnerHome() {
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap">
           <div>
-            <h3>Welcome, {learner.username}!</h3>
+            <h3>Welcome{learner.username}!</h3>
             <p className="text-muted mb-0">
               Email: <strong>{learner.email}</strong>
             </p>
           </div>
-          <LogoutButton />
+        
         </div>
 
         {/* Dashboard Cards */}

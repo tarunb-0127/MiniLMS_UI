@@ -17,9 +17,7 @@ const NAV_CONFIG = {
     { to: "/trainer/create-course", label: "Create Course" },
   ],
   Learner: [
-    { to: "/learner/dashboard", label: "Dashboard" },
     { to: "/browse", label: "Browse Courses" },
-    { to: "/learner/profile", label: "Profile" },
     { to: "/learner/home", label: "Home" },
   ],
 };
