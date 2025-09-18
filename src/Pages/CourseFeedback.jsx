@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Star } from "lucide-react";
+import Navbar from "../Components/Navbar";
 
 export default function CourseFeedback() {
   const { id } = useParams(); // course ID
@@ -76,6 +77,8 @@ export default function CourseFeedback() {
   };
 
   return (
+    <>
+    <Navbar/>
     <div className="container mt-4">
       <h3>Course Feedbacks</h3>
 
@@ -84,47 +87,6 @@ export default function CourseFeedback() {
 
       {/* Success */}
       {success && <div className="alert alert-success">{success}</div>}
-
-      {/* Feedback Form */}
-      <div className="card p-3 mb-4">
-        <h5>Leave Your Feedback</h5>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Comments</label>
-            <textarea
-              className="form-control"
-              rows={3}
-              value={formMessage}
-              onChange={(e) => setFormMessage(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Rating</label>
-            <div>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <Star
-                  key={n}
-                  size={24}
-                  className="me-1"
-                  style={{ cursor: "pointer" }}
-                  color={n <= formRating ? "#ffc107" : "#adb5bd"}
-                  onClick={() => setFormRating(n)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={submitting}
-          >
-            {submitting ? "Submitting…" : "Submit Feedback"}
-          </button>
-        </form>
-      </div>
 
       {/* Feedback List */}
       {feedbacks.length === 0 ? (
@@ -145,5 +107,6 @@ export default function CourseFeedback() {
         </div>
       )}
     </div>
+    </>
   );
 }
